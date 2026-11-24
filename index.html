@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="color-scheme" content="dark">
+  <title>CoinHubX referral stats</title>
+  <style>
+    :root {
+      --bg: #030b10;
+      --card: #0b1c24;
+      --line: rgba(80, 200, 220, 0.16);
+      --text: #e8f6f8;
+      --muted: #8aa3ab;
+      --cyan: #3ad7ea;
+      --ok: #3ee0a2;
+      --wait: #f0c14b;
+      --flag: #ff6b7a;
+      --left: #8aa3ab;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(1200px 500px at 50% -80px, rgba(58, 215, 234, 0.14), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 48px; }
+    header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+    header img { width: 64px; height: 64px; border-radius: 16px; background: #031016; }
+    header h1 { margin: 0; font-size: 1.25rem; letter-spacing: 0.02em; }
+    header p { margin: 2px 0 0; color: var(--muted); font-size: 0.92rem; }
+    .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 16px 0 20px; }
+    @media (min-width: 640px) { .metrics { grid-template-columns: repeat(5, 1fr); } }
+    .metric {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .metric .n { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.03em; }
+    .metric .l { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+    .metric.total .n { color: var(--cyan); }
+    .metric.ok .n { color: var(--ok); }
+    .metric.wait .n { color: var(--wait); }
+    .metric.left .n { color: var(--left); }
+    .metric.flag .n { color: var(--flag); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    h2 { margin: 0 0 4px; font-size: 1.05rem; }
+    .sub, .empty, .when { color: var(--muted); font-size: 0.9rem; }
+    .sub { margin: 0 0 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .table-wrap { overflow-x: auto; }
+    .num, .rank { font-variant-numeric: tabular-nums; }
+    .num.ok { color: var(--ok); }
+    .num.wait { color: var(--wait); }
+    .num.flag { color: var(--flag); }
+    .num.left { color: var(--left); }
+    .empty { padding: 10px 0; }
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+      margin: 2px 4px 2px 0;
+      white-space: nowrap;
+    }
+    .pill.ok { background: rgba(62, 224, 162, 0.14); color: var(--ok); }
+    .pill.wait { background: rgba(240, 193, 75, 0.14); color: var(--wait); }
+    .pill.flag { background: rgba(255, 107, 122, 0.14); color: var(--flag); }
+    .pill.left { background: rgba(138, 163, 171, 0.14); color: var(--left); }
+    details.inviter { padding: 0; }
+    details.inviter summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    details.inviter summary::-webkit-details-marker { display: none; }
+    details.inviter .table-wrap, details.inviter .empty { padding: 0 16px 16px; }
+    .who strong { font-size: 1.02rem; }
+    footer { margin-top: 22px; color: var(--muted); font-size: 0.82rem; text-align: center; }
+    .live { color: var(--cyan); font-weight: 600; }
+    .message { text-align: center; padding: 40px 16px; color: var(--muted); }
+    .message h2 { margin-bottom: 8px; color: var(--text); }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="logo.png" alt="CoinHubX">
+      <div>
+        <h1>CoinHubX referral stats</h1>
+        <p>Live from the referral bot · times in UK (Europe/London)</p>
+      </div>
+    </header>
+
+    <div id="locked" class="card message">
+      <h2>This page is private</h2>
+      <p>Open it from the private link you were sent to see the campaign numbers.</p>
+    </div>
+
+    <div id="error" class="card message hidden">
+      <h2>Could not load the latest numbers</h2>
+      <p id="error-text">Please try again in a moment.</p>
+    </div>
+
+    <div id="app" class="hidden">
+      <div class="metrics" id="metrics"></div>
+      <section class="card">
+        <h2>This week's leaderboard</h2>
+        <p class="sub" id="week-label"></p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Inviter</th>
+                <th>Counted</th>
+                <th>Pending</th>
+                <th>Flagged</th>
+                <th>Left</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard"></tbody>
+          </table>
+        </div>
+      </section>
+      <div id="activity"></div>
+      <h2 style="margin: 18px 4px 10px;">Inviters and who they brought in</h2>
+      <div id="inviters"></div>
+      <footer>
+        <span class="live">Auto-refreshes every 15 seconds</span><br>
+        Last updated <span id="updated"></span><br>
+        The CoinHubX team
+      </footer>
+    </div>
+  </div>
+  <script>
+    function tokenFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const q = (params.get("t") || "").trim();
+      if (q) return q;
+      const hash = (window.location.hash || "").replace(/^#/, "").trim();
+      return hash;
+    }
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+    function pill(kind, text) {
+      return '<span class="pill ' + kind + '">' + escapeHtml(text) + '</span>';
+    }
+    function statusClass(status) {
+      if (status === "counted") return "ok";
+      if (status === "pending") return "wait";
+      if (status === "flagged" || status === "rejected") return "flag";
+      return "left";
+    }
+    function inviterName(row) {
+      const first = (row.first_name || row.label || "").trim();
+      const user = (row.username || "").trim().replace(/^@/, "");
+      if (row.label) return row.label;
+      if (first && user) return first + " @" + user;
+      if (first) return first;
+      if (user) return "@" + user;
+      return "Unknown";
+    }
+    function render(payload) {
+      const t = payload.totals || {};
+      const map = [
+        ["joined", "Total joins", "total"],
+        ["counted", "Counted", "ok"],
+        ["pending", "Pending 72h", "wait"],
+        ["left", "Left", "left"],
+        ["flagged", "Flagged", "flag"]
+      ];
+      document.getElementById("metrics").innerHTML = map.map(([key, label, kind]) => {
+        const n = Number(t[key] || 0);
+        return '<div class="metric ' + kind + '" data-' + key + '="' + n + '">' +
+          '<div class="n">' + n + '</div><div class="l">' + label + '</div></div>';
+      }).join("");
+
+      const weekLabel = document.getElementById("week-label");
+      const board = document.getElementById("leaderboard");
+      const top = payload.weekly_leaderboard || [];
+      if (top.length) {
+        weekLabel.textContent = "Week: " + (payload.week_label || "") +
+          ". Ranked by counted joins this week (after the 72-hour stay).";
+        board.innerHTML = top.map((row) => {
+          return "<tr><td class=\"rank\">#" + row.rank + "</td><td>" +
+            escapeHtml(inviterName(row)) +
+            "</td><td class=\"num ok\">" + row.counted +
+            "</td><td class=\"num wait\">" + row.pending +
+            "</td><td class=\"num flag\">" + row.flagged +
+            "</td><td class=\"num left\">" + row.left + "</td></tr>";
+        }).join("");
+      } else {
+        weekLabel.textContent = "Week: " + (payload.week_label || "") +
+          ". The official weekly score uses counted joins only.";
+        board.innerHTML = '<tr><td colspan="6" class="empty">No counted joins yet this week. A join is counted only after the person stays 72 hours.</td></tr>';
+      }
+
+      const activity = payload.week_activity || [];
+      const activityRoot = document.getElementById("activity");
+      if (activity.length && !top.length) {
+        const rows = activity.map((row) => {
+          return "<tr><td>" + escapeHtml(inviterName(row)) +
+            "</td><td class=\"num wait\">" + row.week_pending + " pending</td>" +
+            "<td class=\"num flag\">" + row.week_flagged + " flagged</td>" +
+            "<td class=\"num left\">" + row.week_left + " left</td>" +
+            "<td class=\"num\">" + row.week_joined + " joined</td></tr>";
+        }).join("");
+        activityRoot.innerHTML =
+          '<section class="card"><h2>This week\'s activity</h2>' +
+          '<p class="sub">Joins that are still pending or flagged, so they are not on the leaderboard yet.</p>' +
+          '<div class="table-wrap"><table><thead><tr><th>Inviter</th><th>Pending</th><th>Flagged</th><th>Left</th><th>Joined</th></tr></thead><tbody>' +
+          rows + "</tbody></table></div></section>";
+      } else {
+        activityRoot.innerHTML = "";
+      }
+
+      const inviters = payload.inviters || [];
+      const root = document.getElementById("inviters");
+      if (!inviters.length) {
+        root.innerHTML = '<div class="card empty-card">No inviters yet. When someone starts the bot, they will show up here.</div>';
+      } else {
+        root.innerHTML = inviters.map((inv) => {
+          const open = inv.joined ? " open" : "";
+          const dq = inv.disqualified ? ' <span class="pill flag">Disqualified</span>' : "";
+          let people;
+          if (!inv.invitees || !inv.invitees.length) {
+            people = '<p class="empty">No one has joined through this link yet.</p>';
+          } else {
+            const rows = inv.invitees.map((person) => {
+              return "<tr><td>" + escapeHtml(person.label) +
+                '</td><td><span class="pill ' + statusClass(person.status) + '">' +
+                escapeHtml(person.status) + '</span></td><td class="when">' +
+                escapeHtml(person.joined_at_display) + " UK</td></tr>";
+            }).join("");
+            people = '<div class="table-wrap"><table><thead><tr><th>Person</th><th>Status</th><th>Joined</th></tr></thead><tbody>' +
+              rows + "</tbody></table></div>";
+          }
+          return '<details class="card inviter"' + open + "><summary><div class=\"who\"><strong>" +
+            escapeHtml(inv.label || inviterName(inv)) + "</strong>" + dq +
+            '</div><div class="counts">' +
+            pill("ok", inv.counted + " counted") +
+            pill("wait", inv.pending + " pending") +
+            pill("left", inv.left + " left") +
+            pill("flag", inv.flagged + " flagged") +
+            "</div></summary>" + people + "</details>";
+        }).join("");
+      }
+      document.getElementById("updated").textContent = payload.generated_at_display || "";
+      document.getElementById("locked").classList.add("hidden");
+      document.getElementById("error").classList.add("hidden");
+      document.getElementById("app").classList.remove("hidden");
+    }
+
+    const token = tokenFromUrl();
+    const locked = document.getElementById("locked");
+    const errorBox = document.getElementById("error");
+    if (!token) {
+      locked.classList.remove("hidden");
+    } else {
+      locked.classList.add("hidden");
+      const dataUrl = "https://gist.githubusercontent.com/eski2108/" + encodeURIComponent(token) + "/raw/stats.json";
+      async function refresh() {
+        try {
+          const res = await fetch(dataUrl + "?_=" + Date.now(), { cache: "no-store" });
+          if (!res.ok) throw new Error("Could not load stats (" + res.status + ")");
+          render(await res.json());
+        } catch (err) {
+          if (document.getElementById("app").classList.contains("hidden")) {
+            errorBox.classList.remove("hidden");
+            document.getElementById("error-text").textContent = "Please try again in a moment.";
+          }
+        }
+      }
+      refresh();
+      setInterval(refresh, 15000);
+    }
+  </script>
+</body>
+</html>
